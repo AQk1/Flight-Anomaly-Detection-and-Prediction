@@ -11,16 +11,17 @@ fake = Faker()
 
 def generate_fake_flight_data(num_records=1000):
     flight_data = {
-        'flight_number': [fake.random_int(min=1000, max=9999) for _ in range(num_records)],  # Assuming a 4-digit flight number
+        'flight_number': [fake.random_int(min=1000, max=9999) for _ in range(num_records)],
         'departure_city': [fake.city() for _ in range(num_records)],
         'arrival_city': [fake.city() for _ in range(num_records)],
-        'departure_time': [fake.date_time_this_decade(tzinfo=None) for _ in range(num_records)],
-        'arrival_time': [fake.date_time_this_decade(tzinfo=None) for _ in range(num_records)],
-        'distance': [random.uniform(100, 5000) for _ in range(num_records)],  # Example distance in miles
-        'passenger_count': [fake.random_int(min=50, max=300) for _ in range(num_records)],
+        'departure_time': [fake.date_time_between(start_date='-1y', end_date='now', tzinfo=None) for _ in range(num_records)],
+        'arrival_time': [fake.date_time_between(start_date='now', end_date='+1y', tzinfo=None) for _ in range(num_records)],
+        'distance': [random.uniform(200, 5000) for _ in range(num_records)],  # Adjusted distance range
+        'passenger_count': [int(np.random.normal(180, 30)) for _ in range(num_records)],  # Adjusted mean passenger count
     }
 
     return pd.DataFrame(flight_data)
+
 
 def load_flight_data(file_path):
     """
@@ -91,10 +92,23 @@ def visualize_results(test_data, test_labels, model):
     Returns:
     - None
     """
-    plt.scatter(test_data['distance'], test_labels, c=np.where(model.predict(test_data[['distance']]) == -1, 'red', 'green'), label='Predictions')
+    predictions = model.predict(test_data[['distance']])
+    scatter = plt.scatter(test_data['distance'], test_labels, c=np.where(predictions == -1, 'red', 'green'), label='Predictions')
+    
+    # Highlight anomalies with a red dot and add a legend for anomalies
+    anomalous_points = test_data[predictions == -1]
+    red_dot = plt.scatter(anomalous_points['distance'], np.zeros_like(anomalous_points), color='red', marker='o', label='Anomalous Point')
+
+    # Combine the handles from the scatter and red_dot for legend
+    handles = [scatter, red_dot]
+    labels = ['Predictions', 'Anomalous']
+    
     plt.xlabel('Flight Distance')
-    plt.ylabel('Green: Normal, Red: Anomalous)')
-    plt.legend(loc='upper left', labels=['Normal', 'Anomalous'])
+    plt.ylabel('passenger_count')
+    
+    # Add legend using handles and labels
+    plt.legend(handles=handles, labels=labels, loc='upper left')
+    
     plt.title('Flight Anomaly Detection')
     plt.show()
 
