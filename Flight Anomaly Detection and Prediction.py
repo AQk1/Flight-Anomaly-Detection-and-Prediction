@@ -1,5 +1,6 @@
 from faker import Faker
 import pandas as pd
+import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
@@ -10,11 +11,11 @@ fake = Faker()
 
 def generate_fake_flight_data(num_records=1000):
     flight_data = {
-        'flight_number': [fake.random_int(min=100, max=9999) for _ in range(num_records)],
+        'flight_number': [fake.random_int(min=1000, max=9999) for _ in range(num_records)],  # Assuming a 4-digit flight number
         'departure_city': [fake.city() for _ in range(num_records)],
         'arrival_city': [fake.city() for _ in range(num_records)],
-        'departure_time': [fake.date_time_this_decade() for _ in range(num_records)],
-        'arrival_time': [fake.date_time_this_decade() for _ in range(num_records)],
+        'departure_time': [fake.date_time_this_decade(tzinfo=None) for _ in range(num_records)],
+        'arrival_time': [fake.date_time_this_decade(tzinfo=None) for _ in range(num_records)],
         'distance': [random.uniform(100, 5000) for _ in range(num_records)],  # Example distance in miles
         'passenger_count': [fake.random_int(min=50, max=300) for _ in range(num_records)],
     }
@@ -92,8 +93,8 @@ def visualize_results(test_data, test_labels, model):
     """
     plt.scatter(test_data['distance'], test_labels, c=np.where(model.predict(test_data[['distance']]) == -1, 'red', 'green'), label='Predictions')
     plt.xlabel('Flight Distance')
-    plt.ylabel('Label (0: Normal, 1: Anomalous)')
-    plt.legend()
+    plt.ylabel('Green: Normal, Red: Anomalous)')
+    plt.legend(loc='upper left', labels=['Normal', 'Anomalous'])
     plt.title('Flight Anomaly Detection')
     plt.show()
 
